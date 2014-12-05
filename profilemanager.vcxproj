@@ -51,7 +51,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>curl-master\include;jsoncpp-master\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>curl\include;jsoncpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>CURL_STATICLIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -59,7 +59,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>libcurld.lib;ws2_32.lib;wldap32.lib;lib_json.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>curl-master\build\Win32\VC12\LIB Debug;Debug/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>curl\build\Win32\VC12\LIB Debug;Debug/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -101,10 +101,10 @@
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="curl-master\projects\Windows\VC12\lib\libcurl.vcxproj">
+    <ProjectReference Include="curl\projects\Windows\VC12\lib\libcurl.vcxproj">
       <Project>{da6f56b4-06a4-441d-ad70-ac5a7d51fadb}</Project>
     </ProjectReference>
-    <ProjectReference Include="jsoncpp-master\makefiles\msvc2010\lib_json.vcxproj">
+    <ProjectReference Include="jsoncpp\makefiles\msvc2010\lib_json.vcxproj">
       <Project>{1e6c2c1c-6453-4129-ae3f-0ee8e6599c89}</Project>
     </ProjectReference>
   </ItemGroup>
