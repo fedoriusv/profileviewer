@@ -1,0 +1,144 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{2EABB718-AA8E-40E2-9628-4502CF379867}</ProjectGuid>
+    <RootNamespace>openssl</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>12.0.21005.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>../../include;../../;../../test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\ssl\bio_ssl.c" />
+    <ClCompile Include="..\..\ssl\d1_both.c" />
+    <ClCompile Include="..\..\ssl\d1_clnt.c" />
+    <ClCompile Include="..\..\ssl\d1_lib.c" />
+    <ClCompile Include="..\..\ssl\d1_meth.c" />
+    <ClCompile Include="..\..\ssl\d1_pkt.c" />
+    <ClCompile Include="..\..\ssl\d1_srtp.c" />
+    <ClCompile Include="..\..\ssl\d1_srvr.c" />
+    <ClCompile Include="..\..\ssl\heartbeat_test.c" />
+    <ClCompile Include="..\..\ssl\kssl.c" />
+    <ClCompile Include="..\..\ssl\s23_clnt.c" />
+    <ClCompile Include="..\..\ssl\s23_lib.c" />
+    <ClCompile Include="..\..\ssl\s23_meth.c" />
+    <ClCompile Include="..\..\ssl\s23_pkt.c" />
+    <ClCompile Include="..\..\ssl\s23_srvr.c" />
+    <ClCompile Include="..\..\ssl\s3_both.c" />
+    <ClCompile Include="..\..\ssl\s3_cbc.c" />
+    <ClCompile Include="..\..\ssl\s3_clnt.c" />
+    <ClCompile Include="..\..\ssl\s3_enc.c" />
+    <ClCompile Include="..\..\ssl\s3_lib.c" />
+    <ClCompile Include="..\..\ssl\s3_meth.c" />
+    <ClCompile Include="..\..\ssl\s3_pkt.c" />
+    <ClCompile Include="..\..\ssl\s3_srvr.c" />
+    <ClCompile Include="..\..\ssl\ssltest.c" />
+    <ClCompile Include="..\..\ssl\ssl_algs.c" />
+    <ClCompile Include="..\..\ssl\ssl_asn1.c" />
+    <ClCompile Include="..\..\ssl\ssl_cert.c" />
+    <ClCompile Include="..\..\ssl\ssl_ciph.c" />
+    <ClCompile Include="..\..\ssl\ssl_conf.c" />
+    <ClCompile Include="..\..\ssl\ssl_err.c" />
+    <ClCompile Include="..\..\ssl\ssl_err2.c" />
+    <ClCompile Include="..\..\ssl\ssl_lib.c" />
+    <ClCompile Include="..\..\ssl\ssl_rsa.c" />
+    <ClCompile Include="..\..\ssl\ssl_sess.c" />
+    <ClCompile Include="..\..\ssl\ssl_stat.c" />
+    <ClCompile Include="..\..\ssl\ssl_task.c" />
+    <ClCompile Include="..\..\ssl\ssl_txt.c" />
+    <ClCompile Include="..\..\ssl\ssl_utst.c" />
+    <ClCompile Include="..\..\ssl\t1_clnt.c" />
+    <ClCompile Include="..\..\ssl\t1_enc.c" />
+    <ClCompile Include="..\..\ssl\t1_ext.c" />
+    <ClCompile Include="..\..\ssl\t1_lib.c" />
+    <ClCompile Include="..\..\ssl\t1_meth.c" />
+    <ClCompile Include="..\..\ssl\t1_reneg.c" />
+    <ClCompile Include="..\..\ssl\t1_srvr.c" />
+    <ClCompile Include="..\..\ssl\t1_trce.c" />
+    <ClCompile Include="..\..\ssl\tls_srp.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\ssl\dtls1.h" />
+    <ClInclude Include="..\..\ssl\kssl.h" />
+    <ClInclude Include="..\..\ssl\kssl_lcl.h" />
+    <ClInclude Include="..\..\ssl\srtp.h" />
+    <ClInclude Include="..\..\ssl\ssl.h" />
+    <ClInclude Include="..\..\ssl\ssl2.h" />
+    <ClInclude Include="..\..\ssl\ssl23.h" />
+    <ClInclude Include="..\..\ssl\ssl3.h" />
+    <ClInclude Include="..\..\ssl\ssl_locl.h" />
+    <ClInclude Include="..\..\ssl\tls1.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
