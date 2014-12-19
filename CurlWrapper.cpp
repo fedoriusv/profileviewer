@@ -205,6 +205,9 @@ ERequestSevice CurlWrapper::getServiceByName(const std::string& service)
 CurlWrapper::CurlWrapper()
 {
     _errBuf.resize(_errBufSize);
+    
+    CURLcode code = curl_global_init(CURL_GLOBAL_ALL);
+    char* version = curl_version();
 }
 
 CurlWrapper::~CurlWrapper()
@@ -343,6 +346,7 @@ void CurlWrapper::addAsynRequest(CurlRequest* request)
         curl_easy_setopt(request->_curl, CURLOPT_WRITEDATA, request->_data);
 
         curl_easy_setopt(request->_curl, CURLOPT_SSL_VERIFYPEER, 0L);
+        curl_easy_setopt(request->_curl, CURLOPT_USERAGENT, "User-Agent: Some-Agent/1.0");
 
        //curl_easy_setopt(request._curl, CURLOPT_HEADERFUNCTION, request.headerWrite);
         //curl_easy_setopt(request._curl, CURLOPT_WRITEHEADER, &request._data);
