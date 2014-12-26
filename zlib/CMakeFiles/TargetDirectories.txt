@@ -1,0 +1,6 @@
+D:/Git/profileviewer/profileviewer/zlib/CMakeFiles/ALL_BUILD.dir
+D:/Git/profileviewer/profileviewer/zlib/CMakeFiles/ZERO_CHECK.dir
+D:/Git/profileviewer/profileviewer/zlib/CMakeFiles/example.dir
+D:/Git/profileviewer/profileviewer/zlib/CMakeFiles/minigzip.dir
+D:/Git/profileviewer/profileviewer/zlib/CMakeFiles/zlib.dir
+D:/Git/profileviewer/profileviewer/zlib/CMakeFiles/zlibstatic.dir
