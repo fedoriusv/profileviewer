@@ -7,30 +7,6 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-namespace pv
-{
-    struct SeviceLinkData : public UserData
-    {
-        SeviceLinkData()
-        : _service("")
-        {
-        }
-
-        virtual ~SeviceLinkData()
-        {
-        }
-
-        std::string     _service;
-
-        void            setSeviceLinkData(const std::string& service)
-        {
-            _service = service;
-        }
-    };
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 using namespace pv;
 
 ProfileManager::ProfileManager()
@@ -230,13 +206,13 @@ void ProfileManager::getConfigLinks(const std::string& clientId, callback callba
     std::string link = _gameData._link;
     link.append(clientId);
 
-    pv::CurlRequest* req = new pv::CurlRequest();
+    pv::RequestSevice* req = new pv::RequestSevice(pv::RequestSevice::eGet);
     req->setUrl(link);
     req->setCallback(callback, caller);
     req->setService(ERequestSevice::eGetConfigLinks);
 
     LOG_GEBUG("ProfileManager::getServiceLinks: Set ServiceLinks request %s ", link.c_str());
-    _curl->addAsynRequest(req);
+    _curl->addAsyncRequest(req);
 
     ProfileManager::setState(EProfileState::eWaitState);
 }
@@ -276,13 +252,13 @@ std::string ProfileManager::getServiceLink(const std::string& service)
     link.append("/locate?service=");
     link.append(service);
 
-    pv::CurlRequest* req = new pv::CurlRequest();
+    pv::RequestSevice* req = new pv::RequestSevice(pv::RequestSevice::eGet);
     req->setUrl(link);
     req->setService(ERequestSevice::eGetSevriceLink);
 
     LOG_GEBUG("ProfileManager::getServiceLink: Set ServiceLinks request %s ", link.c_str());
 
-    const CurlResponse* res = _curl->addSynRequest(req);
+    const CurlResponse* res = _curl->addSyncRequest(req);
     if (!res)
     {
         LOG_ERROR("ProfileManager::getServiceLink: Invalid Response");
@@ -326,22 +302,25 @@ void ProfileManager::getAccessToken(const std::string& user, const std::string& 
 
     std::string link = "https://";
     link.append(address);
-    link.append("/authorize?");
-    link.append("scope=storage storage_restricted storage_admin");
+    link.append("/authorize");
 
-    pv::CurlRequest* req = new pv::CurlRequest();
+    pv::RequestSevice* req = new pv::RequestSevice(pv::RequestSevice::ePost);
     req->setUrl(link);
 
     req->setCallback(callback, caller);
     req->setService(ERequestSevice::eGetAccessToken);
 
-    req->addParam("client_id", clientId);
     req->addParam("username", user);
-    req->addParam("password", password);
-    req->addParam("access_token_only", "true");
+    /*req->addParam("password", password);
+    req->addParam("client_id", clientId);
+    req->addParam("scope", "config storage");*/
+    //req->addParam("scope", "storage storage_restricted storage_admin");
+    //req->addParam("access_token_only", "true");
+
+    req->addHeaders("User-Agent", "InfamousHeroes_Debug.exe/0.0 GlWebTools/2.0 Windows/6.1.7601 (PC)");
 
     LOG_GEBUG("ProfileManager::getServiceLinks: Set ServiceLinks request %s ", link.c_str());
-    _curl->addAsynRequest(req);
+    _curl->addAsyncRequest(req);
 
     ProfileManager::setState(EProfileState::eWaitState);
 }
@@ -357,7 +336,7 @@ void ProfileManager::responseCallback(const CurlResponse* response)
     }
 
     int code = response->getResponseCode();
-    ERequestSevice service = response->getSevice();
+    ERequestSevice service = static_cast<const ResponseService*>(response)->getSevice();
 
     switch (service)
     {
