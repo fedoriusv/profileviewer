@@ -87,6 +87,7 @@ namespace pv
         void                        setupHandler(CurlRequest* request);
 
         std::vector<CurlRequest*>   _requestList;
+        FILE*                       _logFile;
 
         static std::recursive_mutex s_mutex;
 

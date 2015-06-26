@@ -234,6 +234,7 @@ bool ProfileManager::parseConfigLinksResponse(const std::string& data)
     }
 
     _configLink = value.get("pandora", "").asString();
+    LOG_INFO("ProfileManager::parseConfigLinksResponse: config link: %s", _configLink.c_str());
 
     return true;
 }
@@ -294,6 +295,8 @@ void ProfileManager::getAccessToken(const std::string& user, const std::string& 
 
 
     std::string address = ProfileManager::getServiceLink("auth");
+    LOG_INFO("ProfileManager::getAccessToken: Get auth link: %s", address.c_str());
+
     if (address.empty())
     {
         LOG_ERROR("ProfileManager::getAccessToken: Empty link address");
@@ -310,19 +313,23 @@ void ProfileManager::getAccessToken(const std::string& user, const std::string& 
     req->setCallback(callback, caller);
     req->setService(ERequestSevice::eGetAccessToken);
 
-    req->addParam("username", user);
-    /*req->addParam("password", password);
     req->addParam("client_id", clientId);
-    req->addParam("scope", "config storage");*/
+    req->addParam("username", user);
+    req->addParam("password", password);
+    req->addParam("scope", "config storage");
+
     //req->addParam("scope", "storage storage_restricted storage_admin");
     //req->addParam("access_token_only", "true");
 
-    req->addHeaders("User-Agent", "InfamousHeroes_Debug.exe/0.0 GlWebTools/2.0 Windows/6.1.7601 (PC)");
+    //req->addHeaders("User-Agent", "GlWebTools/2.0 / ()");
 
     LOG_GEBUG("ProfileManager::getServiceLinks: Set ServiceLinks request %s ", link.c_str());
-    _curl->addAsyncRequest(req);
+    //_curl->addAsyncRequest(req);
 
-    ProfileManager::setState(EProfileState::eWaitState);
+    const CurlResponse* res = _curl->addSyncRequest(req);
+    int code = res->getResponseCode();
+    std::string data(reinterpret_cast<const char*>(res->getData()), res->getSize());
+    int a = 0;
 }
 
 void ProfileManager::responseCallback(const CurlResponse* response)
@@ -371,13 +378,13 @@ void ProfileManager::responseCallback(const CurlResponse* response)
         {
             LOG_GEBUG("ProfileManager::responseCallback: Received AccessToken data. Code %d", code);
 
-            if (code == EResopnceCode::eSuccess)
+            //if (code == EResopnceCode::eSuccess)
             {
                 std::string data(reinterpret_cast<const char*>(response->getData()), response->getSize());
 
                 int a = 0;
             }
-            else
+            //else
             {
                 LOG_ERROR("ProfileManager::responseCallback:  Received AccessToken data. Code %d", code);
                 ProfileManager::setState(EProfileState::eErrorState);

@@ -70,11 +70,17 @@ CurlWrapper::CurlWrapper()
 {
     CURLcode code = curl_global_init(CURL_GLOBAL_ALL);
     char* version = curl_version();
+
+    fopen_s(&_logFile, "dump.log", "wb");
 }
 
 CurlWrapper::~CurlWrapper()
 {
+    fclose(_logFile);
     _requestList.clear();
+
+
+    curl_global_cleanup();
 }
 
 void CurlWrapper::update()
@@ -134,6 +140,9 @@ const CurlResponse* CurlWrapper::addSyncRequest(CurlRequest* request)
         {
             response->_responseCode = -1;
             response->_curlCode = code;
+#if _DEBUG
+            printf("Request ended with error : [%d] %s", code, curl_easy_strerror(code));
+#endif //_DEBUG
 
             request->setStatus(eError);
         }
@@ -221,12 +230,17 @@ void CurlWrapper::setupHandler(CurlRequest* request)
     curl_easy_setopt(request->_curl, CURLOPT_SSL_VERIFYPEER, 0L);
     curl_easy_setopt(request->_curl, CURLOPT_ACCEPT_ENCODING, "gzip;q=1.0, deflate;q=1.0, identity;q=0.5, *;q=0");
 
-    //curl_easy_setopt(request._curl, CURLOPT_HEADERFUNCTION, request.headerWrite);
-    //curl_easy_setopt(request._curl, CURLOPT_WRITEHEADER, &request._data);
+    curl_easy_setopt(request->_curl, CURLOPT_HEADERFUNCTION, request->headerWrite);
+    curl_easy_setopt(request->_curl, CURLOPT_WRITEHEADER, request->_data);
 
+#ifdef _DEBUG
     request->_errBuf.clear();
     request->_errBuf.resize(request->_errBufSize);
     curl_easy_setopt(request->_curl, CURLOPT_ERRORBUFFER, &request->_errBuf[0]);
+
+    curl_easy_setopt(request->_curl, CURLOPT_VERBOSE, 1L);
+    curl_easy_setopt(request->_curl, CURLOPT_STDERR, _logFile);
+#endif //_DEBUG
 
     if (request->_headerlist)
     {
@@ -256,6 +270,9 @@ bool CurlWrapper::runRequest(CurlRequest* request)
             response->_service = static_cast<RequestSevice*>(request)->_service;
             response->_caller = request->_caller;
             response->_error = request->_errBuf;
+#if _DEBUG
+            printf("Request ended with error : [%d] %s", code, curl_easy_strerror(code));
+#endif //_DEBUG
 
             request->setStatus(eError);
             request->_callback(response);
