@@ -24,9 +24,10 @@ namespace pv
         {
             eErrorState,
             eWaitState,
-            eGetConfigLinks,
-            eGetServiceLinks,
+            eGetConfigLinksState,
+            eGetServiceLinksState,
             eGetAccessTokeState,
+            eGetUserStorageState,
         };
 
         struct GameData
@@ -59,17 +60,20 @@ namespace pv
     private:
 
         std::string                 getClientID() const;
+        const std::string&          getAccessToken() const;
 
         void                        setState(EProfileState state);
 
-        void                        getConfigLinks(const std::string& clientId, callback callback, void* caller);
-        void                        getAccessToken(const std::string& user, const std::string& password, const std::string& clientId, callback callback, void* caller);
+        void                        getConfigLinks(const std::string& clientId, callback callback, void* caller, int retry = 3);
+        void                        getAccessToken(const std::string& user, const std::string& password, const std::string& clientId, callback callback, void* caller, int retry = 3);
+        void                        getUserStorage(const std::string& token, callback callback, void* caller, int retry = 3);
 
 
         std::string                 getServiceLink(const std::string& service);
 
 
         bool                        parseConfigLinksResponse(const std::string& data);
+        bool                        parseAccessTokenResponse(const std::string& data);
 
 
         CurlWrapper*                _curl;
@@ -80,6 +84,7 @@ namespace pv
         std::vector<std::string>    _credentials;
 
         std::string                 _configLink;
+        std::string                 _accessToken;
 
 
         void                        responseCallback(const CurlResponse* response);

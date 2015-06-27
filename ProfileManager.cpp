@@ -1,6 +1,7 @@
 #include "ProfileManager.h"
 
 #include "CurlWrapper.h"
+#include "CurlData.h"
 #include "Logger.h"
 
 #include "json/json.h"
@@ -10,8 +11,9 @@
 using namespace pv;
 
 ProfileManager::ProfileManager()
-: _state(eGetConfigLinks)
+: _state(eGetConfigLinksState)
 , _configLink("")
+, _accessToken("")
 {
     _curl = new CurlWrapper();
 }
@@ -25,6 +27,11 @@ ProfileManager::~ProfileManager()
     }
 
     _credentials.clear();
+}
+
+const std::string& ProfileManager::getAccessToken() const
+{
+    return _accessToken;
 }
 
 const std::vector<std::string>& ProfileManager::getCredentialList() const
@@ -44,24 +51,26 @@ void ProfileManager::update()
     switch (_state)
     {
         case eErrorState:
-        {
-            LOG_ERROR("Error State");
             break;
-        }
 
         case eWaitState:
             break;
 
-        case eGetConfigLinks:
+        case eGetConfigLinksState:
         {
-            getConfigLinks(getClientID(), std::bind(&ProfileManager::responseCallback, this, std::placeholders::_1), this);
+            ProfileManager::getConfigLinks(getClientID(), std::bind(&ProfileManager::responseCallback, this, std::placeholders::_1), this);
             break;
         }
 
-
         case eGetAccessTokeState:
         {
-            getAccessToken(_gameData._user, _gameData._password, getClientID(), std::bind(&ProfileManager::responseCallback, this, std::placeholders::_1), this);
+            ProfileManager::getAccessToken(_gameData._user, _gameData._password, getClientID(), std::bind(&ProfileManager::responseCallback, this, std::placeholders::_1), this);
+            break;
+        }
+
+        case eGetUserStorageState:
+        {
+            ProfileManager::getUserStorage(getAccessToken(), std::bind(&ProfileManager::responseCallback, this, std::placeholders::_1), this);
             break;
         }
 
@@ -189,7 +198,7 @@ std::string ProfileManager::getClientID() const
     return client;
 }
 
-void ProfileManager::getConfigLinks(const std::string& clientId, callback callback, void* caller)
+void ProfileManager::getConfigLinks(const std::string& clientId, callback callback, void* caller, int retry)
 {
     if (clientId.empty())
     {
@@ -206,12 +215,16 @@ void ProfileManager::getConfigLinks(const std::string& clientId, callback callba
     std::string link = _gameData._link;
     link.append(clientId);
 
-    pv::RequestSevice* req = new pv::RequestSevice(pv::RequestSevice::eGet);
+    UserData* data = new UserData();
+    data->_value = retry;
+
+    RequestSevice* req = new RequestSevice(RequestSevice::eGet);
     req->setUrl(link);
     req->setCallback(callback, caller);
     req->setService(ERequestSevice::eGetConfigLinks);
+    req->setUserData(data);
 
-    LOG_GEBUG("ProfileManager::getServiceLinks: Set ServiceLinks request %s ", link.c_str());
+    LOG_DEBUG("ProfileManager::getServiceLinks: Set ServiceLinks request %s ", link.c_str());
     _curl->addAsyncRequest(req);
 
     ProfileManager::setState(EProfileState::eWaitState);
@@ -234,7 +247,7 @@ bool ProfileManager::parseConfigLinksResponse(const std::string& data)
     }
 
     _configLink = value.get("pandora", "").asString();
-    LOG_INFO("ProfileManager::parseConfigLinksResponse: config link: %s", _configLink.c_str());
+    LOG_DEBUG("ProfileManager::parseConfigLinksResponse: config link: %s", _configLink.c_str());
 
     return true;
 }
@@ -253,11 +266,11 @@ std::string ProfileManager::getServiceLink(const std::string& service)
     link.append("/locate?service=");
     link.append(service);
 
-    pv::RequestSevice* req = new pv::RequestSevice(pv::RequestSevice::eGet);
+    RequestSevice* req = new RequestSevice(RequestSevice::eGet);
     req->setUrl(link);
     req->setService(ERequestSevice::eGetSevriceLink);
 
-    LOG_GEBUG("ProfileManager::getServiceLink: Set ServiceLinks request %s ", link.c_str());
+    LOG_DEBUG("ProfileManager::getServiceLink: Set ServiceLinks request %s ", link.c_str());
 
     const CurlResponse* res = _curl->addSyncRequest(req);
     if (!res)
@@ -285,7 +298,7 @@ std::string ProfileManager::getServiceLink(const std::string& service)
 
 }
 
-void ProfileManager::getAccessToken(const std::string& user, const std::string& password, const std::string& clientId, callback callback, void* caller)
+void ProfileManager::getAccessToken(const std::string& user, const std::string& password, const std::string& clientId, callback callback, void* caller, int retry)
 {
     if (user.empty() || password.empty() || clientId.empty())
     {
@@ -295,7 +308,7 @@ void ProfileManager::getAccessToken(const std::string& user, const std::string& 
 
 
     std::string address = ProfileManager::getServiceLink("auth");
-    LOG_INFO("ProfileManager::getAccessToken: Get auth link: %s", address.c_str());
+    LOG_DEBUG("ProfileManager::getAccessToken: Get auth link: %s", address.c_str());
 
     if (address.empty())
     {
@@ -307,7 +320,7 @@ void ProfileManager::getAccessToken(const std::string& user, const std::string& 
     link.append(address);
     link.append("/authorize");
 
-    pv::RequestSevice* req = new pv::RequestSevice(pv::RequestSevice::ePost);
+    RequestSevice* req = new RequestSevice(RequestSevice::eGet);
     req->setUrl(link);
 
     req->setCallback(callback, caller);
@@ -316,20 +329,54 @@ void ProfileManager::getAccessToken(const std::string& user, const std::string& 
     req->addParam("client_id", clientId);
     req->addParam("username", user);
     req->addParam("password", password);
-    req->addParam("scope", "config storage");
+    req->addParam("scope", "storage storage_restricted storage_admin");
 
-    //req->addParam("scope", "storage storage_restricted storage_admin");
-    //req->addParam("access_token_only", "true");
+    //req->addHeaders("Content-Type","application/x-www-form-urlencoded");
 
-    //req->addHeaders("Content-Type", "application/x-www-form-urlencoded");
+    LOG_DEBUG("ProfileManager::getServiceLinks: Set ServiceLinks request %s ", link.c_str());
+    _curl->addAsyncRequest(req);
+}
 
-    LOG_GEBUG("ProfileManager::getServiceLinks: Set ServiceLinks request %s ", link.c_str());
-    //_curl->addAsyncRequest(req);
+bool ProfileManager::parseAccessTokenResponse(const std::string& data)
+{
+    Json::Reader reader;
+    Json::Value value;
+    bool succes = reader.parse(data, value);
 
-    const CurlResponse* res = _curl->addSyncRequest(req);
-    int code = res->getResponseCode();
-    std::string data(reinterpret_cast<const char*>(res->getData()), res->getSize());
-    int a = 0;
+    if (!succes)
+    {
+        return false;
+    }
+
+    if (!value.isMember("access_token"))
+    {
+        return false;
+    }
+
+    _accessToken = value.get("access_token", "").asString();
+    LOG_DEBUG("ProfileManager::parseAccessTokenResponse: Access token: %s", _accessToken.c_str());
+
+    return true;
+}
+
+void ProfileManager::getUserStorage(const std::string& token, callback callback, void* caller, int retry)
+{
+    if (token.empty())
+    {
+        LOG_ERROR("ProfileManager::getUserStorage: Empty Access token");
+        ProfileManager::setState(EProfileState::eErrorState);
+    }
+
+    //TODO:
+    RequestSevice* req = new RequestSevice(RequestSevice::eGet);
+    req->setUrl("");
+
+    req->setCallback(callback, caller);
+    req->setService(ERequestSevice::eGetUserProfile);
+
+    req->addParam("client_id", "");
+
+    _curl->addAsyncRequest(req);
 }
 
 void ProfileManager::responseCallback(const CurlResponse* response)
@@ -349,21 +396,27 @@ void ProfileManager::responseCallback(const CurlResponse* response)
     {
         case ERequestSevice::eGetConfigLinks:
         {
-            LOG_GEBUG("ProfileManager::responseCallback: Received ConfigLinks data. Code %d", code);
-
+            LOG_INFO("ProfileManager::responseCallback: Received ConfigLinks data. Code %d", code);
             if (code == EResopnceCode::eSuccess)
             {
                 std::string data(reinterpret_cast<const char*>(response->getData()), response->getSize());
-                
                 if (ProfileManager::parseConfigLinksResponse(data))
                 {
-                    LOG_GEBUG("ProfileManager::responseCallback: Parse ConfigLinks data completed");
+                    LOG_INFO("ProfileManager::responseCallback: Parse ConfigLinks data completed");
                     ProfileManager::setState(EProfileState::eGetAccessTokeState);
                 }
                 else
                 {
-                    LOG_ERROR("ProfileManager::responseCallback:  Error Parse ConfigLinks data");
-                    ProfileManager::setState(EProfileState::eErrorState);
+                    if (response->getUserData() && response->getUserData()->_value > 0)
+                    {
+                        LOG_WARNING("ProfileManager::responseCallback: Error Parse ConfigLinks data. Retry count %d", response->getUserData()->_value);
+                        ProfileManager::getConfigLinks(getClientID(), std::bind(&ProfileManager::responseCallback, this, std::placeholders::_1), this, response->getUserData()->_value - 1);
+                    }
+                    else
+                    {
+                        LOG_ERROR("ProfileManager::responseCallback: Error Parse ConfigLinks data");
+                        ProfileManager::setState(EProfileState::eErrorState);
+                    }
                 }
             }
             else
@@ -376,20 +429,52 @@ void ProfileManager::responseCallback(const CurlResponse* response)
 
         case ERequestSevice::eGetAccessToken:
         {
-            LOG_GEBUG("ProfileManager::responseCallback: Received AccessToken data. Code %d", code);
-
-            //if (code == EResopnceCode::eSuccess)
+            LOG_INFO("ProfileManager::responseCallback: Received AccessToken data. Code %d", code);
+            if (code == EResopnceCode::eSuccess)
             {
                 std::string data(reinterpret_cast<const char*>(response->getData()), response->getSize());
-
-                int a = 0;
+                if (ProfileManager::parseAccessTokenResponse(data))
+                {
+                    LOG_INFO("ProfileManager::responseCallback: Parse AccessToken data completed");
+                    ProfileManager::setState(EProfileState::eGetUserStorageState);
+                }
+                else
+                {
+                    if (response->getUserData() && response->getUserData()->_value > 0)
+                    {
+                        LOG_WARNING("ProfileManager::responseCallback: Error Parse AccessToken data. Retry count %d", response->getUserData()->_value);
+                        ProfileManager::getConfigLinks(getClientID(), std::bind(&ProfileManager::responseCallback, this, std::placeholders::_1), this, response->getUserData()->_value - 1);
+                    }
+                    else
+                    {
+                        LOG_ERROR("ProfileManager::responseCallback: Error Parse AccessToken data");
+                        ProfileManager::setState(EProfileState::eErrorState);
+                    }
+                }
+                
             }
-            //else
+            else
             {
                 LOG_ERROR("ProfileManager::responseCallback:  Received AccessToken data. Code %d", code);
                 ProfileManager::setState(EProfileState::eErrorState);
             }
             break;
+        }
+
+        case ERequestSevice::eGetUserProfile:
+        {
+            LOG_INFO("ProfileManager::responseCallback: Received UserProfile data. Code %d", code);
+            if (code == EResopnceCode::eSuccess)
+            {
+                std::string data(reinterpret_cast<const char*>(response->getData()), response->getSize());
+                int a = 0;
+                //TODO:
+            }
+            else
+            {
+                LOG_ERROR("ProfileManager::responseCallback:  Received UserProfile data. Code %d", code);
+                ProfileManager::setState(EProfileState::eErrorState);
+            }
         }
 
         default:

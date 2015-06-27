@@ -27,9 +27,8 @@ namespace pv
 
     struct UserData
     {
-        UserData()
-        : _value(0)
-        {}
+        UserData();
+        ~UserData();
 
         int _value;
     };

@@ -49,3 +49,14 @@ void CurlData::copy(size_t size, void* data)
     _data = malloc(size);
     memcpy(_data, data, size);
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+UserData::UserData()
+    : _value(0)
+{
+}
+
+UserData::~UserData()
+{
+}

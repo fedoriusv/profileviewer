@@ -57,13 +57,13 @@ namespace pv
 
 #if USE_LOGGER
 #   define LOG(messages, ...) Logger::getInstance()->log(pv::ELoggerType::eLoggerNone, pv::ELogOut::eConsoleLog, messages, ##__VA_ARGS__);
-#   define LOG_GEBUG(messages, ...) Logger::getInstance()->log(pv::ELoggerType::eLoggerDebug, pv::ELogOut::eConsoleLog, messages, ##__VA_ARGS__);
+#   define LOG_DEBUG(messages, ...) Logger::getInstance()->log(pv::ELoggerType::eLoggerDebug, pv::ELogOut::eConsoleLog, messages, ##__VA_ARGS__);
 #   define LOG_INFO(messages, ...) Logger::getInstance()->log(pv::ELoggerType::eLoggerInfo, pv::ELogOut::eConsoleLog, messages, ##__VA_ARGS__);
 #   define LOG_WARNING(messages, ...) Logger::getInstance()->log(pv::ELoggerType::eLoggerWarning, pv::ELogOut::eConsoleLog, messages, ##__VA_ARGS__);
 #   define LOG_ERROR(messages, ...) Logger::getInstance()->log(pv::ELoggerType::eLoggerError, pv::ELogOut::eConsoleLog, messages, ##__VA_ARGS__);
 #else
 #   define LOG(messages, ...)
-#   define LOG_GEBUG(messages, ...)
+#   define LOG_DEBUG(messages, ...)
 #   define LOG_INFO(messages, ...)
 #   define LOG_WARNING(messages, ...)
 #   define LOG_ERROR(messages, ...)

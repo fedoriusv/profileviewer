@@ -131,7 +131,7 @@ const CurlResponse* CurlWrapper::addSyncRequest(CurlRequest* request)
             request->_data->swap(response->_data);
             if (request->_userData)
             {
-                response->_userData = request->_userData;
+                std::swap(response->_userData, request->_userData);
             }
 
             curl_easy_getinfo(request->_curl, CURLINFO_RESPONSE_CODE, &response->_responseCode);
@@ -231,7 +231,7 @@ void CurlWrapper::setupHandler(CurlRequest* request)
     curl_easy_setopt(request->_curl, CURLOPT_WRITEDATA, request);
 
     curl_easy_setopt(request->_curl, CURLOPT_SSL_VERIFYPEER, 0L);
-    curl_easy_setopt(request->_curl, CURLOPT_ACCEPT_ENCODING, "gzip;q=1.0, deflate;q=1.0, identity;q=0.5, *;q=0");
+    //curl_easy_setopt(request->_curl, CURLOPT_ACCEPT_ENCODING, "gzip;q=1.0, deflate;q=1.0, identity;q=0.5, *;q=0");
 
 #ifdef _DEBUG
     request->_errBuf.clear();
@@ -302,7 +302,7 @@ void CurlWrapper::responseProcessed(CurlRequest* request)
 
     if (request->_userData)
     {
-        response->_userData = request->_userData;
+        std::swap(response->_userData, request->_userData);
     }
 
     curl_easy_getinfo(request->_curl, CURLINFO_RESPONSE_CODE, &response->_responseCode);
