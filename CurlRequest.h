@@ -53,11 +53,13 @@ namespace pv
         void            addParam(const std::string& field, const std::string& value);
         void            addHeaders(const std::string& field, const  std::string& value);
 
+        void            cancel();
+
+        ERequestStatus  getStatus() const;
+
     private:
 
         friend class    CurlWrapper;
-
-        CURL*           _curl;
 
         std::string     _url;
 
@@ -69,22 +71,26 @@ namespace pv
 
         void            setStatus(ERequestStatus status);
 
-        static int      dataWrite(char* ptr, size_t size, size_t nmemb, void* userdata);
-        static int      headerWrite(char* ptr, size_t size, size_t nmemb, void* userdata);
+        int             dataWrite(char* ptr, size_t size);
+        int             headerWrite(char* ptr, size_t size);
+        int             proccess(double dltotal, double dlnow, double ultotal, double ulnow);
 
         void            appendData(std::string& data);
 
         ERequestStatus  _status;
         int             _maxConnections;
         int             _timeout;
+        int             _progress;
+        bool            _canceled;
 
         ParamList       _paramList;
         EMethod         _method;
 
+        CURL*           _curl;
         curl_slist*     _headerlist;
 
-        const size_t   _errBufSize = 1024;
-        std::string    _errBuf;
+        const size_t    _errBufSize = 1024;
+        std::string     _errBuf;
     };
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////

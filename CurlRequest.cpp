@@ -5,20 +5,26 @@
 using namespace pv;
 
 CurlRequest::CurlRequest(EMethod method)
-: _curl(nullptr)
-, _url("")
+: _url("")
+
 , _callback(nullptr)
-, _status(eNotStarted)
 , _caller(nullptr)
-, _maxConnections(1)
-, _timeout(120)
+
 , _data(nullptr)
 , _userData(nullptr)
-, _method(method)
+
+, _status(eNotStarted)
+, _maxConnections(1)
+, _timeout(120)
+, _progress(0)
+, _canceled(false)
+
+, _curl(nullptr)
 , _headerlist(nullptr)
+
+, _method(method)
 {
     _errBuf.resize(_errBufSize);
-
     _data = new CurlData();
 }
 
@@ -30,8 +36,14 @@ CurlRequest::~CurlRequest()
         _data = nullptr;
     }
 
-    _paramList.clear();
+    if (_userData)
+    {
+        delete _userData;
+        _userData = nullptr;
+    }
 
+    _errBuf.clear();
+    _paramList.clear();
     if (_headerlist)
     {
         curl_slist_free_all(_headerlist);
@@ -57,7 +69,10 @@ void CurlRequest::setStatus(ERequestStatus status)
 
 void CurlRequest::setUserData(UserData* userdata)
 {
-    _userData = userdata;
+    if (userdata)
+    {
+        _userData = userdata;
+    }
 }
 
 void CurlRequest::addParam(const std::string& field, const std::string& value)
@@ -65,41 +80,55 @@ void CurlRequest::addParam(const std::string& field, const std::string& value)
     _paramList[field] = value;
 }
 
-int CurlRequest::dataWrite(char* ptr, size_t size, size_t nmemb, void* userdata)
+void CurlRequest::cancel()
 {
-    if (userdata)
+    _canceled = true;
+}
+
+ERequestStatus CurlRequest::getStatus() const
+{
+    return _status;
+}
+
+int CurlRequest::dataWrite(char* ptr, size_t size)
+{
+    if (_data && size > 0)
     {
-        CurlData* data = static_cast<CurlData*>(userdata);
-
-        data->_size = size * nmemb;
-
-        if (data->_size > 0)
-        {
-            data->_data = malloc(data->_size);
-            memcpy(data->_data, ptr, data->_size);
-
-            return data->_size;
-        }
-    }
+        _data->copy(size, ptr);
+        return static_cast<int>(size);
+     }
 
     return 0;
 }
 
-int CurlRequest::headerWrite(char *ptr, size_t size, size_t nmemb, void *userdata)
+int CurlRequest::headerWrite(char* ptr, size_t size)
 {
-    if (userdata)
+    if (!ptr || size <= 0)
     {
-        CurlData* data = static_cast<CurlData*>(userdata);
+        return 0;
+    }
 
-        data->_size = size * nmemb;
+    std::string header(ptr, size);
+    if (_data)
+    {
+        _data->addHeader(header);
+        return  static_cast<int>(size);
+    }
 
-        if (data->_size > 0)
-        {
-            data->_data = malloc(data->_size);
-            memcpy(data->_data, ptr, data->_size);
+    return 0;
 
-            return data->_size;
-        }
+}
+
+int CurlRequest::proccess(double dltotal, double dlnow, double ultotal, double ulnow)
+{
+    if (_timeout > 0)
+    {
+        ++_progress;
+    }
+
+    if (_canceled || _progress > _timeout)
+    {
+        return -1;
     }
 
     return 0;

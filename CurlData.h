@@ -9,28 +9,18 @@ namespace pv
 
     struct CurlData
     {
-        CurlData()
-        : _size(0)
-        , _data(nullptr)
-        {}
+        CurlData();
+        ~CurlData();
 
-        ~CurlData()
-        {
-            _size = 0;
-            if (_data)
-            {
-                free(_data);
-            }
-        }
+        void    addHeader(const std::string& header);
+        void    reset();
+        void    swap(CurlData* data);
+        void    copy(size_t size, void* data);
 
-        int     _size;
-        void*   _data;
+        std::vector<std::string>    _headerLines;
 
-        void    swap(CurlData* data)
-        {
-            std::swap(_size, data->_size);
-            std::swap(_data, data->_data);
-        }
+        int                         _size;
+        void*                       _data;
     };
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////

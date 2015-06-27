@@ -39,3 +39,5 @@ Ankh.NoLoad
 *.lai
 *.la
 *.a
+*.tlog
+*.idb

@@ -321,7 +321,7 @@ void ProfileManager::getAccessToken(const std::string& user, const std::string& 
     //req->addParam("scope", "storage storage_restricted storage_admin");
     //req->addParam("access_token_only", "true");
 
-    //req->addHeaders("User-Agent", "GlWebTools/2.0 / ()");
+    //req->addHeaders("Content-Type", "application/x-www-form-urlencoded");
 
     LOG_GEBUG("ProfileManager::getServiceLinks: Set ServiceLinks request %s ", link.c_str());
     //_curl->addAsyncRequest(req);

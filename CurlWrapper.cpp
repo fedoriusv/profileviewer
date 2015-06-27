@@ -216,22 +216,22 @@ void CurlWrapper::setupHandler(CurlRequest* request)
         break;
     }
 
-    curl_easy_setopt(request->_curl, CURLOPT_NOPROGRESS, 0L);
-    curl_easy_setopt(request->_curl, CURLOPT_NOSIGNAL, 1L);
-    curl_easy_setopt(request->_curl, CURLOPT_FOLLOWLOCATION, true);
     curl_easy_setopt(request->_curl, CURLOPT_URL, request->_url.c_str());
-
+    curl_easy_setopt(request->_curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(request->_curl, CURLOPT_MAXCONNECTS, request->_maxConnections);
     curl_easy_setopt(request->_curl, CURLOPT_CONNECTTIMEOUT, request->_timeout);
 
-    curl_easy_setopt(request->_curl, CURLOPT_WRITEFUNCTION, request->dataWrite);
-    curl_easy_setopt(request->_curl, CURLOPT_WRITEDATA, request->_data);
+    curl_easy_setopt(request->_curl, CURLOPT_NOPROGRESS, 0L);
+    curl_easy_setopt(request->_curl, CURLOPT_NOSIGNAL, 1L);
+    curl_easy_setopt(request->_curl, CURLOPT_PROGRESSFUNCTION, CurlWrapper::proccess);
+    curl_easy_setopt(request->_curl, CURLOPT_PROGRESSDATA, request);
+    curl_easy_setopt(request->_curl, CURLOPT_HEADERFUNCTION, CurlWrapper::headerWrite);
+    curl_easy_setopt(request->_curl, CURLOPT_WRITEHEADER, request);
+    curl_easy_setopt(request->_curl, CURLOPT_WRITEFUNCTION, CurlWrapper::dataWrite);
+    curl_easy_setopt(request->_curl, CURLOPT_WRITEDATA, request);
 
     curl_easy_setopt(request->_curl, CURLOPT_SSL_VERIFYPEER, 0L);
     curl_easy_setopt(request->_curl, CURLOPT_ACCEPT_ENCODING, "gzip;q=1.0, deflate;q=1.0, identity;q=0.5, *;q=0");
-
-    curl_easy_setopt(request->_curl, CURLOPT_HEADERFUNCTION, request->headerWrite);
-    curl_easy_setopt(request->_curl, CURLOPT_WRITEHEADER, request->_data);
 
 #ifdef _DEBUG
     request->_errBuf.clear();
@@ -310,6 +310,47 @@ void CurlWrapper::responseProcessed(CurlRequest* request)
     request->_callback(response);
 
     s_mutex.unlock();
+}
+
+int CurlWrapper::proccess(void* userdata, double dltotal, double dlnow, double ultotal, double ulnow)
+{
+    if (userdata)
+    {
+        CurlRequest* request = static_cast<CurlRequest*>(userdata);
+
+        return request->proccess(dltotal, dlnow, ultotal, ulnow);
+    }
+
+    return -1;
+}
+
+int CurlWrapper::headerWrite(char* ptr, size_t size, size_t nmemb, void* userdata)
+{
+    if (userdata)
+    {
+        CurlRequest* request = static_cast<CurlRequest*>(userdata);
+        size_t sizeStr = size * nmemb;
+
+        return request->headerWrite(ptr, sizeStr);
+    }
+
+    return 0;
+}
+
+int CurlWrapper::dataWrite(char* ptr, size_t size, size_t nmemb, void* userdata)
+{
+    if (userdata)
+    {
+        CurlRequest* request = static_cast<CurlRequest*>(userdata);
+        size_t sizeStr = size * nmemb;
+
+        if (!request->_canceled)
+        {
+            return request->dataWrite(ptr, sizeStr);
+        }
+    }
+
+    return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////

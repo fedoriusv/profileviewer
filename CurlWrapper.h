@@ -82,6 +82,10 @@ namespace pv
 
     private:
 
+        static int                  headerWrite(char* ptr, size_t size, size_t nmemb, void* userdata);
+        static int                  dataWrite(char* ptr, size_t size, size_t nmemb, void* userdata);
+        static int                  proccess(void* userdata, double dltotal, double dlnow, double ultotal, double ulnow);
+
         bool                        runRequest(CurlRequest* request);
         void                        responseProcessed(CurlRequest* request);
         void                        setupHandler(CurlRequest* request);
