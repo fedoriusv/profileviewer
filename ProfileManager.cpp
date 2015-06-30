@@ -3,6 +3,7 @@
 #include "CurlWrapper.h"
 #include "CurlData.h"
 #include "Logger.h"
+#include "UserProfile.h"
 
 #include "json/json.h"
 
@@ -14,8 +15,10 @@ ProfileManager::ProfileManager()
 : _state(eGetConfigLinksState)
 , _configLink("")
 , _accessToken("")
+, _credential("iphone:lN4AAOhiAABiAAAA3oAAAA==") //test
 {
     _curl = new CurlWrapper();
+    _user = new UserProfile();
 }
 
 ProfileManager::~ProfileManager()
@@ -24,6 +27,12 @@ ProfileManager::~ProfileManager()
     {
         delete _curl;
         _curl = nullptr;
+    }
+
+    if (_user)
+    {
+        delete _user;
+        _user = nullptr;
     }
 
     _credentials.clear();
@@ -70,9 +79,12 @@ void ProfileManager::update()
 
         case eGetUserStorageState:
         {
-            ProfileManager::getUserStorage(getAccessToken(), std::bind(&ProfileManager::responseCallback, this, std::placeholders::_1), this);
+            ProfileManager::getUserStorage(getAccessToken(), _credential, _gameData._profile, std::bind(&ProfileManager::responseCallback, this, std::placeholders::_1), this);
             break;
         }
+
+        case eLoadedDoneState:
+            break;
 
         default:
             break;
@@ -359,24 +371,67 @@ bool ProfileManager::parseAccessTokenResponse(const std::string& data)
     return true;
 }
 
-void ProfileManager::getUserStorage(const std::string& token, callback callback, void* caller, int retry)
+void ProfileManager::getUserStorage(const std::string& token, const std::string& credential, const std::string& selector, callback callback, void* caller, int retry)
 {
-    if (token.empty())
+    if (token.empty() || credential.empty())
     {
-        LOG_ERROR("ProfileManager::getUserStorage: Empty Access token");
+        LOG_ERROR("ProfileManager::getUserStorage: Empty Access token %s or Credential %s", token.c_str(), credential.c_str());
         ProfileManager::setState(EProfileState::eErrorState);
     }
 
-    //TODO:
+    std::string address = ProfileManager::getServiceLink("storage");
+    LOG_DEBUG("ProfileManager::getUserStorage: Get storage link: %s", address.c_str());
+
+    if (address.empty())
+    {
+        LOG_ERROR("ProfileManager::getUserStorage: Empty link address");
+        ProfileManager::setState(EProfileState::eErrorState);
+    }
+
+    std::string link = "https://";
+    link.append(address);
+    link.append("/profiles/");
+    link.append(credential);
+    link.append("/myprofile");
+    //link.append(selector);
+
     RequestSevice* req = new RequestSevice(RequestSevice::eGet);
-    req->setUrl("");
+    req->setUrl(link);
 
     req->setCallback(callback, caller);
     req->setService(ERequestSevice::eGetUserProfile);
-
-    req->addParam("client_id", "");
+    req->addParam("access_token", token);
 
     _curl->addAsyncRequest(req);
+}
+
+bool ProfileManager::parseUserStorageResponse(const std::string& data)
+{
+    Json::Reader reader;
+    Json::Value value;
+    bool succes = reader.parse(data, value);
+
+    if (!succes)
+    {
+        return false;
+    }
+
+    if (!value.isMember("_shadow_inventory") || !value["_shadow_inventory"].isMember("items_data"))
+    {
+        LOG_WARNING("ProfileManager::parseUserStorageResponse: user data field not exist for cred:", _credential.c_str());
+        return true;
+    }
+
+    std::string userData = value["_shadow_inventory"].get("items_data", "") .asString();
+    LOG_DEBUG("ProfileManager::parseUserStorageResponse: User data: %s", userData.c_str());
+
+    if (!_user->read(userData))
+    {
+        LOG_ERROR("ProfileManager::parseUserStorageResponse: Error read user data");
+        return false;
+    }
+
+    return true;
 }
 
 void ProfileManager::responseCallback(const CurlResponse* response)
@@ -443,7 +498,8 @@ void ProfileManager::responseCallback(const CurlResponse* response)
                     if (response->getUserData() && response->getUserData()->_value > 0)
                     {
                         LOG_WARNING("ProfileManager::responseCallback: Error Parse AccessToken data. Retry count %d", response->getUserData()->_value);
-                        ProfileManager::getConfigLinks(getClientID(), std::bind(&ProfileManager::responseCallback, this, std::placeholders::_1), this, response->getUserData()->_value - 1);
+                        ProfileManager::getAccessToken(_gameData._user, _gameData._password, getClientID(), std::bind(&ProfileManager::responseCallback, this, std::placeholders::_1),
+                            this, response->getUserData()->_value - 1);
                     }
                     else
                     {
@@ -467,13 +523,30 @@ void ProfileManager::responseCallback(const CurlResponse* response)
             if (code == EResopnceCode::eSuccess)
             {
                 std::string data(reinterpret_cast<const char*>(response->getData()), response->getSize());
-                int a = 0;
-                //TODO:
+                if (ProfileManager::parseUserStorageResponse(data))
+                {
+                    LOG_INFO("ProfileManager::responseCallback: Parse UserStorage data completed");
+                    ProfileManager::setState(EProfileState::eLoadedDoneState);
+                }
+                else
+                {
+                    if (response->getUserData() && response->getUserData()->_value > 0)
+                    {
+                        LOG_WARNING("ProfileManager::responseCallback: Error Parse UserStorage data. Retry count %d", response->getUserData()->_value);
+                        ProfileManager::getUserStorage(getAccessToken(), _credential, _gameData._profile, std::bind(&ProfileManager::responseCallback, this, std::placeholders::_1),
+                            this, response->getUserData()->_value - 1);
+                    }
+                    else
+                    {
+                        LOG_ERROR("ProfileManager::responseCallback: Error Parse UserStorage data");
+                        ProfileManager::setState(EProfileState::eErrorState);
+                    }
+                }
             }
             else
             {
                 LOG_ERROR("ProfileManager::responseCallback:  Received UserProfile data. Code %d", code);
-                ProfileManager::setState(EProfileState::eErrorState);
+                ProfileManager::setState(code == EResopnceCode::eNotFound ? EProfileState::eLoadedDoneState : EProfileState::eErrorState);
             }
         }
 
