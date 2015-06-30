@@ -393,15 +393,14 @@ void ProfileManager::getUserStorage(const std::string& token, const std::string&
     link.append("/profiles/");
     link.append(credential);
     link.append("/myprofile");
-    link.append(selector);
+    //link.append(selector);
 
-    RequestSevice* req = new RequestSevice(RequestSevice::ePost);
+    RequestSevice* req = new RequestSevice(RequestSevice::eGet);
     req->setUrl(link);
 
     req->setCallback(callback, caller);
     req->setService(ERequestSevice::eGetUserProfile);
     req->addParam("access_token", token);
-
 
     _curl->addAsyncRequest(req);
 }
