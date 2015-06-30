@@ -176,9 +176,7 @@ void CurlWrapper::setupHandler(CurlRequest* request)
 {
     s_mutex.lock();
 
-    std::string data("");
-    request->appendData(data);
-
+    const std::string& data = request->appendData();
     if (request->_method == CurlRequest::eGet && !data.empty())
     {
         request->_url.append("?");

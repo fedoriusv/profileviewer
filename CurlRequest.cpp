@@ -6,6 +6,7 @@ using namespace pv;
 
 CurlRequest::CurlRequest(EMethod method)
 : _url("")
+, _params("")
 
 , _callback(nullptr)
 , _caller(nullptr)
@@ -134,9 +135,9 @@ int CurlRequest::proccess(double dltotal, double dlnow, double ultotal, double u
     return 0;
 }
 
-void CurlRequest::appendData(std::string& data)
+const std::string& CurlRequest::appendData()
 {
-    data.clear();
+    _params.clear();
     for (auto& param : _paramList)
     {
         if (param.first.empty())
@@ -144,19 +145,21 @@ void CurlRequest::appendData(std::string& data)
             continue;
         }
 
-        data.append(param.first);
-        data.append("=");
+        _params.append(param.first);
+        _params.append("=");
 
         std::string coded("");
         Codec::EncodeUrlRFC3986(param.second, coded);
-        data.append(coded);
-        data.append("&");
+        _params.append(coded);
+        _params.append("&");
     }
 
-    if (data.size())
+    if (_params.size())
     {
-        data.resize(data.size() - 1);
+        _params.resize(_params.size() - 1);
     }
+
+    return _params;
 }
 
 void CurlRequest::addHeaders(const std::string& field, const  std::string& value)

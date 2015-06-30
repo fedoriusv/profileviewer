@@ -59,38 +59,39 @@ namespace pv
 
     private:
 
-        friend class    CurlWrapper;
+        friend class        CurlWrapper;
 
-        std::string     _url;
+        std::string         _url;
+        std::string         _params;
 
-        callback        _callback;
-        void*           _caller;
+        callback            _callback;
+        void*               _caller;
 
-        CurlData*       _data;
-        UserData*       _userData;
+        CurlData*           _data;
+        UserData*           _userData;
 
-        void            setStatus(ERequestStatus status);
+        void                setStatus(ERequestStatus status);
 
-        int             dataWrite(char* ptr, size_t size);
-        int             headerWrite(char* ptr, size_t size);
-        int             proccess(double dltotal, double dlnow, double ultotal, double ulnow);
+        int                 dataWrite(char* ptr, size_t size);
+        int                 headerWrite(char* ptr, size_t size);
+        int                 proccess(double dltotal, double dlnow, double ultotal, double ulnow);
 
-        void            appendData(std::string& data);
+        const std::string&  appendData();
 
-        ERequestStatus  _status;
-        int             _maxConnections;
-        int             _timeout;
-        int             _progress;
-        bool            _canceled;
+        ERequestStatus      _status;
+        int                 _maxConnections;
+        int                 _timeout;
+        int                 _progress;
+        bool                _canceled;
 
-        ParamList       _paramList;
-        EMethod         _method;
+        ParamList           _paramList;
+        EMethod             _method;
 
-        CURL*           _curl;
-        curl_slist*     _headerlist;
+        CURL*               _curl;
+        curl_slist*         _headerlist;
 
-        const size_t    _errBufSize = 1024;
-        std::string     _errBuf;
+        const size_t        _errBufSize = 1024;
+        std::string         _errBuf;
     };
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
